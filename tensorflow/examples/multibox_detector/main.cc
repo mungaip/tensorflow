@@ -18,6 +18,7 @@ limitations under the License.
 #include <string.h>
 #include <fstream>
 #include <vector>
+#include <ctime>
 
 #include "tensorflow/cc/ops/const_op.h"
 #include "tensorflow/cc/ops/image_ops.h"
@@ -407,6 +408,10 @@ int main(int argc, char* argv[]) {
   }
   const Tensor& resized_tensor = image_tensors[0];
 
+  // Begin timing
+  using namespace std;
+  clock_t begin = clock();
+
   // Actually run the image through the model.
   std::vector<Tensor> outputs;
   Status run_status =
@@ -417,6 +422,10 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  // End timing + Calculate inference time
+  clock_t end = clock();
+  double inference_time = double(end - begin) / CLOCKS_PER_SEC;
+
   Status print_status = PrintTopDetections(outputs, box_priors, num_boxes,
                                            num_detections, image_out,
                                            &image_tensors[1]);
@@ -425,5 +434,6 @@ int main(int argc, char* argv[]) {
     LOG(ERROR) << "Running print failed: " << print_status;
     return -1;
   }
+  LOG(INFO) << "===== Inference Time: " << inference_time << "s ======";
   return 0;
 }
